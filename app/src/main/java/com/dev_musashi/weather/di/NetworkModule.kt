@@ -2,7 +2,6 @@ package com.dev_musashi.weather.di
 
 import com.dev_musashi.weather.data.remote.Constants.Companion.BASE_URL
 import com.dev_musashi.weather.data.remote.WeatherApi
-import com.dev_musashi.weather.domain.repository.WeatherRepository
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
@@ -20,7 +19,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    val gson : Gson = GsonBuilder()
+    private val gson : Gson = GsonBuilder()
         .setLenient()
         .create()
 
@@ -53,8 +52,5 @@ object NetworkModule {
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
-
-
-
 
 }

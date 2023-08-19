@@ -1,4 +1,4 @@
-package com.dev_musashi.weather.util
+package com.dev_musashi.weather.data
 
 fun calCurrentWeatherTime(h: Int, m: Int): String =
     if (m < 45) {

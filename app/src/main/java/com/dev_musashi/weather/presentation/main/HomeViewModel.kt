@@ -1,62 +1,67 @@
 package com.dev_musashi.weather.presentation.main
 
-import javax.inject.Inject
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.compose.runtime.mutableStateOf
+import com.dev_musashi.weather.data.location.LocationTrackerImpl
+import com.dev_musashi.weather.data.repository.WeatherRepositoryImpl
 import com.dev_musashi.weather.domain.Resource
-import com.dev_musashi.weather.util.convertXY
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.dev_musashi.weather.domain.location.LocationTracker
-import com.dev_musashi.weather.domain.usecase.GetCurrentWeather
-import com.dev_musashi.weather.domain.usecase.GetTodayWeather
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getTodayWeather: GetTodayWeather,
-    private val getCurrentWeather: GetCurrentWeather,
-    private val locationTracker: LocationTracker
+    private val repository: WeatherRepositoryImpl,
+    private val locationTracker: LocationTrackerImpl
 ) : ViewModel() {
     var state = mutableStateOf(HomeState())
         private set
 
-    fun loadWeatherData() {
+    fun initWeather() {
         viewModelScope.launch {
             state.value = state.value.copy(isLoading = true)
-            delay(5000)
             val location = locationTracker.getCurrentLocation()
             if (location != null) {
                 state.value = state.value.copy(address = location.second!!)
-                loadCurrentTimeDate(location.first!!.latitude, location.second!!.longitude)
-                loadDayTimeDate(location.first!!.latitude, location.second!!.longitude)
+                loadCurWeather(location.first!!.latitude, location.second!!.longitude).join()
+                loadDayWeather(location.first!!.latitude, location.second!!.longitude).start()
+            } else {
+                state.value = state.value.copy(isLoading = false, isLocationError = true)
             }
         }
     }
 
-    private fun loadCurrentTimeDate(x: Double, y: Double) {
-        viewModelScope.launch {
-            when (val currentWeather = getCurrentWeather(nx = x, ny = y)) {
-                is Resource.Success -> {
-                    state.value = state.value.copy(currentWeather = currentWeather.data, isLoading = false)
-                }
-                is Resource.Error -> {
-                    state.value = state.value.copy(currentWeather = null, isLoading = false)
-                }
+    private fun loadCurWeather(x: Double, y: Double) = viewModelScope.launch(Dispatchers.IO) {
+        when (val currentWeather = repository.getCurrentWeather(nx = x, ny = y)) {
+            is Resource.Success -> {
+                state.value = state.value.copy(currentWeather = currentWeather.data)
+            }
+
+            is Resource.Error -> {
+                state.value = state.value.copy(
+                    currentWeather = null,
+                    isLoading = false,
+                    loadFail = true
+                )
             }
         }
     }
 
-    private fun loadDayTimeDate(x: Double, y: Double) {
-        viewModelScope.launch {
-            when (val weatherData = getTodayWeather(nx = x, ny = y)) {
-                is Resource.Success -> {
-                    state.value = state.value.copy(weatherData = weatherData.data?.weatherMap, isLoading = false)
+    private fun loadDayWeather(x: Double, y: Double) = viewModelScope.launch(Dispatchers.IO) {
+        when (val weatherData = repository.getTodayWeather(nx = x, ny = y)) {
+            is Resource.Success -> {
+                if (weatherData.data != null) {
+                    state.value = state.value.copy(
+                        dayWeather = weatherData.data.weatherMap,
+                        isLoading = false
+                    )
                 }
-                is Resource.Error -> {
-                    state.value = state.value.copy(weatherData = null, isLoading = false)
-                }
+            }
+
+            is Resource.Error -> {
+                state.value = state.value.copy(isLoading = false, loadFail = true)
             }
         }
     }
