@@ -1,5 +1,6 @@
 package com.dev_musashi.weather.data.mapper
 
+import android.util.Log
 import com.dev_musashi.weather.data.remote.Body
 import com.dev_musashi.weather.data.remote.Item
 import com.dev_musashi.weather.data.remote.Items
@@ -39,10 +40,17 @@ fun Items.toMapGroupByDate(): Map<String, List<Item>> {
     val currentDate = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(cal.time)
     val currentTime = currentHour + currentMinute
     val map = item.groupBy { it.fcstDate }.toMutableMap()
+    map.forEach {
+        println(it.key)
+        it.value.forEach {
+            println(it)
+        }
+    }
+    Log.d("TAG", "toMapGroupByDate: ${map.keys.size}")
     if (currentTime.toInt() in 2300..2359) {
         map.remove(key = currentDate)
     } else {
-        if (map.keys.size == 3) {
+        while(map.keys.size>=3) {
             map.remove(key = map.keys.last())
         }
     }

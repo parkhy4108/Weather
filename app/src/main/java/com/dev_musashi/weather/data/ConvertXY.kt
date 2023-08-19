@@ -1,4 +1,4 @@
-package com.dev_musashi.weather.util
+package com.dev_musashi.weather.data
 
 import android.graphics.Point
 import kotlin.math.*

@@ -18,22 +18,21 @@ import com.dev_musashi.weather.domain.data.WeatherData
 @Composable
 fun HourWeatherCard(
     item: WeatherData,
-    modifier: Modifier,
+    modifier: Modifier = Modifier,
 ) {
     Card(
         backgroundColor = Color.White,
         shape = RoundedCornerShape(10.dp),
         modifier = modifier
-            .padding(16.dp)
             .width(80.dp)
             .height(100.dp)
     ) {
         Column(
-            modifier = Modifier,
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceAround
         ) {
-            Text(text = item.time.substring(0,2) + ":" + item.time.substring(2,4))
+            Text(text = item.time.substring(0, 2) + ":" + item.time.substring(2, 4))
             Image(painter = painterResource(id = item.weatherClassification.iconRes), contentDescription = null)
             Text(text = item.weatherClassification.desc, fontSize = 10.sp)
             Text(text = item.temperature + "°C")
